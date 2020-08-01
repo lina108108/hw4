@@ -414,6 +414,8 @@ public class FormTest {
             $(".input_invalid [role=presentation]").shouldHave(Condition.text("Я соглашаюсь"));
         }
     }
+    
+
 
 }
 
