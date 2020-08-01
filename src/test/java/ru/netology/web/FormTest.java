@@ -1,0 +1,419 @@
+package ru.netology.web;
+
+import com.codeborne.selenide.Condition;
+import com.codeborne.selenide.SelenideElement;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.openqa.selenium.Keys;
+
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+
+import static com.codeborne.selenide.Condition.exactText;
+import static com.codeborne.selenide.Selectors.byText;
+import static com.codeborne.selenide.Selenide.*;
+import static org.openqa.selenium.By.cssSelector;
+
+public class FormTest {
+
+    private LocalDate today = LocalDate.now();
+    private LocalDate date = today.plusDays(7);
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private String todayString = today.format(formatter);
+    private String dateString = date.format(formatter);
+    private LocalDate setDate = LocalDate.of(2023, 10, 8);
+    private int y = Period.between(today, setDate).getYears();
+    private int m = Period.between(today, setDate).getMonths();
+    private int d = setDate.getDayOfMonth();
+    private SelenideElement buttonYear = $(".calendar__arrow_direction_right[data-step='12']");
+    private SelenideElement buttonMonth = $(".calendar__arrow_direction_right[data-step='1']");
+
+    public void setYear() {
+        for (int i = 0; i < y; i++) {
+            buttonYear.click();
+        }
+    }
+
+    public void setMonth() {
+        for (int i = 0; i <= m; i++) {
+            buttonMonth.click();
+        }
+    }
+
+
+    @Nested
+    public class FullyValid {
+
+        @Test
+        void shouldSubmitRequest() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(cssSelector(".notification__title")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldSubmitWithChoosing() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Мо");
+            $$(".menu-item").find(exactText("Москва")).click();
+            form.$(cssSelector("[data-test-id=date] input")).click();
+            form.$(cssSelector(".input__icon [role=button]")).click();
+            setYear();
+            setMonth();
+            $$(".calendar__day").find(exactText(String.valueOf(d))).click();
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(cssSelector(".notification__title")).waitUntil(Condition.visible, 15000);
+        }
+    }
+
+    @Nested
+    public class FieldCityTests {
+
+        @Test
+        void shouldNotSubmitRequestIfCityWithSmallLetter() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Поле обязательно для заполнения")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldSubmitRequestIfCityWithDash() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Нарьян-Мар");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(cssSelector(".notification__title")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfCityIrrelevant() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Урюпинск");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Доставка в выбранный город недоступна")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfCityInIrrelevantSymbols() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Moskva");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Доставка в выбранный город недоступна")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfCityIsEmpty() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Поле обязательно для заполнения")).waitUntil(Condition.visible, 15000);
+        }
+    }
+
+    @Nested
+    public class FieldDateTests {
+
+        @Test
+        void shouldNotSubmitRequestIfDateEmpty() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Неверно введена дата")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfDateInvalid() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(todayString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Заказ на выбранную дату невозможен")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfDateInvalidSymbols() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys("dkjhsfkajhdf");
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Неверно введена дата")).waitUntil(Condition.visible, 15000);
+        }
+    }
+
+    @Nested
+    public class FieldNameTests {
+
+        @Test
+        void shouldNotSubmitRequestIfInSmallLetters() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("лиана вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Поле обязательно для заполнения")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldSubmitRequestIfWithDash() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Николаева-Петрова");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(cssSelector(".notification__title")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfEmpty() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Поле обязательно для заполнения")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfOnlyName() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Поле обязательно для заполнения")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfOneLetter() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Л В");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Поле обязательно для заполнения")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfIrrelevantAmountOfLetters() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лааавалорлываорпдлаворпдвлфорпдлвапрлфвоарпдфвлаопрвадлопрлдфваорфплыоварловоарфловралофврплоаврплорва Ни");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы.")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfLatinLetters() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Liana Veldiaeva");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы.")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestIfIrrelevantSymbols() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("123 456");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы.")).waitUntil(Condition.visible, 15000);
+        }
+    }
+
+    @Nested
+    public class FieldTelTests {
+
+        @Test
+        void shouldNotSubmitRequestIfEmpty() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Поле обязательно для заполнения")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestWithoutPlus() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("79054619900");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678.")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestWithTenNumbers() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+790546199000");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678.")).waitUntil(Condition.visible, 15000);
+        }
+
+        @Test
+        void shouldNotSubmitRequestWithTwelveNumbers() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+7905461990");
+            form.$(cssSelector("[data-test-id=agreement]")).click();
+            form.$(byText("Забронировать")).click();
+            $(byText("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678.")).waitUntil(Condition.visible, 15000);
+        }
+
+
+    }
+
+    @Nested
+    public class FieldAgreementTests {
+
+
+        @Test
+        void shouldNotSubmitRequestWithoutAgreement() {
+            open("http://localhost:9999");
+            SelenideElement form = $("[action]");
+            form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
+            form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
+            form.$(cssSelector("[data-test-id=date] input")).sendKeys(dateString);
+            form.$(cssSelector("[name=name]")).sendKeys("Лиана Вельдяева");
+            form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
+            form.$(byText("Забронировать")).click();
+            $(".input_invalid [role=presentation]").shouldHave(Condition.text("Я соглашаюсь"));
+        }
+    }
+
+}
+
