@@ -18,13 +18,12 @@ import static org.openqa.selenium.By.cssSelector;
 
 public class FormTest {
     SelenideElement form;
+    
     @BeforeEach
     void setup() {
         open("http://localhost:9999");
         form = $("[action]");
     }
-
-
 
     private LocalDate today = LocalDate.now();
     private LocalDate date = today.plusDays(7);
@@ -50,7 +49,7 @@ public class FormTest {
         }
     }
 
-
+    
     @Nested
     public class FullyValid {
 
@@ -379,7 +378,5 @@ public class FormTest {
         }
     }
     
-
-
-}
+   }
 
