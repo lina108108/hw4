@@ -2,6 +2,7 @@ package ru.netology.web;
 
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.SelenideElement;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Keys;
@@ -16,6 +17,14 @@ import static com.codeborne.selenide.Selenide.*;
 import static org.openqa.selenium.By.cssSelector;
 
 public class FormTest {
+    SelenideElement form;
+    @BeforeEach
+    void setup() {
+        open("http://localhost:9999");
+        form = $("[action]");
+    }
+
+
 
     private LocalDate today = LocalDate.now();
     private LocalDate date = today.plusDays(7);
@@ -47,8 +56,6 @@ public class FormTest {
 
         @Test
         void shouldSubmitRequest() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -62,8 +69,6 @@ public class FormTest {
 
         @Test
         void shouldSubmitWithChoosing() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Мо");
             $$(".menu-item").find(exactText("Москва")).click();
             form.$(cssSelector("[data-test-id=date] input")).click();
@@ -84,8 +89,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfCityWithSmallLetter() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -99,7 +102,6 @@ public class FormTest {
 
         @Test
         void shouldSubmitRequestIfCityWithDash() {
-            open("http://localhost:9999");
             SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Нарьян-Мар");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
@@ -114,8 +116,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfCityIrrelevant() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Урюпинск");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -129,8 +129,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfCityInIrrelevantSymbols() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Moskva");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -144,8 +142,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfCityIsEmpty() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -163,8 +159,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfDateEmpty() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -177,8 +171,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfDateInvalid() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -192,8 +184,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfDateInvalidSymbols() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -211,8 +201,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfInSmallLetters() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -221,13 +209,11 @@ public class FormTest {
             form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
             form.$(cssSelector("[data-test-id=agreement]")).click();
             form.$(byText("Забронировать")).click();
-            $(byText("Поле обязательно для заполнения")).waitUntil(Condition.visible, 15000);
+            $(byText("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы.")).waitUntil(Condition.visible, 15000);
         }
 
         @Test
         void shouldSubmitRequestIfWithDash() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -241,8 +227,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfEmpty() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -256,8 +240,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfOnlyName() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -266,13 +248,11 @@ public class FormTest {
             form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
             form.$(cssSelector("[data-test-id=agreement]")).click();
             form.$(byText("Забронировать")).click();
-            $(byText("Поле обязательно для заполнения")).waitUntil(Condition.visible, 15000);
+            $(byText("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы.")).waitUntil(Condition.visible, 15000);
         }
 
         @Test
         void shouldNotSubmitRequestIfOneLetter() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -281,13 +261,11 @@ public class FormTest {
             form.$(cssSelector("[name=phone]")).sendKeys("+79054619900");
             form.$(cssSelector("[data-test-id=agreement]")).click();
             form.$(byText("Забронировать")).click();
-            $(byText("Поле обязательно для заполнения")).waitUntil(Condition.visible, 15000);
+            $(byText("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы.")).waitUntil(Condition.visible, 15000);
         }
 
         @Test
         void shouldNotSubmitRequestIfIrrelevantAmountOfLetters() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -301,8 +279,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfLatinLetters() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -316,8 +292,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfIrrelevantSymbols() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -335,8 +309,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestIfEmpty() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -350,8 +322,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestWithoutPlus() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -365,8 +335,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestWithTenNumbers() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -380,8 +348,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestWithTwelveNumbers() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
@@ -402,8 +368,6 @@ public class FormTest {
 
         @Test
         void shouldNotSubmitRequestWithoutAgreement() {
-            open("http://localhost:9999");
-            SelenideElement form = $("[action]");
             form.$(cssSelector("[data-test-id=city] input")).sendKeys("Москва");
             form.$(cssSelector("[data-test-id=date] input")).sendKeys(Keys.chord(Keys.CONTROL, "a"));
             form.$(cssSelector("[data-test-id=date] input")).doubleClick().sendKeys(Keys.DELETE);
